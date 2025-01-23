@@ -51,6 +51,45 @@ class PostController extends Controller
         return response()->json($datas);
     }
 
+    public function indexFilter(Request $request)
+    {
+        try {
+            // Ambil query parameter untuk pencarian nama dan email
+            $search = $request->query('search');
+            $professionFilter = $request->query('profession');
+            
+            // Query dasar untuk mengambil data
+            $query = Post::query();
+    
+            // Jika ada parameter pencarian (search) di query string
+            if ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', '%' . $search . '%')
+                          ->orWhere('email', 'like', '%' . $search . '%');
+                });
+            }
+    
+            // Jika ada parameter profesi (profession) di query string
+            if ($professionFilter) {
+                $query->where('profession', $professionFilter);
+            }
+    
+            // Urutkan berdasarkan waktu update terakhir
+            $posts = $query->orderBy('updated_at', 'desc')->get();
+    
+            // Kembalikan data dalam format JSON
+            return response()->json([
+                'status' => 'success',
+                'data' => $posts,
+            ], 200);
+        } catch (\Exception $err) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $err->getMessage(),
+            ], 500);
+        }
+    }
+    
     /**
      * Store a newly created resource in storage.
      */
@@ -113,9 +152,23 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        $data = Post::findOrFail($id);
-        return response()->json($data);
-    }
+        try {
+            // Mencari data berdasarkan ID
+            $post = Post::findOrFail($id);
+    
+            // Mengembalikan data dalam bentuk JSON
+            return response()->json([
+                'status' => 'success',
+                'data' => $post,
+            ], 200);
+        } catch (\Exception $err) {
+            // Menangani error jika data tidak ditemukan
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data tidak ditemukan',
+            ], 404);
+        }
+    }    
 
     /**
      * Update the specified resource in storage.
