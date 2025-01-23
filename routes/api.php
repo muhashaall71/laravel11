@@ -18,8 +18,8 @@ Route::get("/test", function(){
 
 
 // Route API untuk CRUD Data
-Route::get('/dataAll', [PostController::class, 'indexAll']); // GET semua data
-Route::get('/data', [PostController::class, 'index']); // GET semua data
+Route::get('/dataAll', [PostController::class, 'index']); // GET semua data
+Route::get('/data', [PostController::class, 'indexReq']); // GET semua data
 Route::post('/data', [PostController::class, 'store']); // POST data baru
 Route::get('/data/{id}', [PostController::class, 'show']); // GET data berdasarkan ID
 Route::put('/data/{id}', [PostController::class, 'update']); // UPDATE data

@@ -4,20 +4,30 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Post;
-
+use Illuminate\Support\Facades\Validator;
 
 class PostController extends Controller
 {
-    public function indexAll()
+    public function index()
     {
-        $query = Post::all();
-        return response()->json($query, 200);
+        try {
+            $datas = Post::all();
+            return response()->json([
+                "status" => "success",
+                "data" => $datas,
+            ], 200);
+        } catch (\Exception $err) {
+            return response()->json([
+                "status" => "error",
+                "message" => $err->getMessage(),
+            ], 500);
+        }
     }
 
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function indexReq(Request $request)
     {
         $query = Post::query();
 
@@ -46,20 +56,59 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:datas',
-            'profession' => 'required|in:Developer,Teacher,Doctor',
-        ]);
+        try {
+            // Ambil data dari request
+            $data = $request->all();
 
-        $data = Post::create($validated);
+            // Aturan validasi
+            $rules = [
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:post_data,email',
+                'profession' => 'required|in:Developer,Teacher,Doctor',
+            ];
 
-        return response()->json([
-            'message' => 'Data created successfully',
-            'data' => $data,
-        ], 201);
+            // Pesan kesalahan validasi
+            $messages = [
+                'name.required' => 'Nama harus diisi',
+                'email.required' => 'Email harus diisi',
+                'email.email' => 'Format email tidak valid',
+                'email.unique' => 'Email sudah digunakan',
+                'profession.required' => 'Profesi harus diisi',
+            ];
+
+            // Validasi data
+            $validator = Validator::make($data, $rules, $messages);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $validator->errors()->first(),
+                ], 400);
+            }
+
+            // Buat data baru di tabel post_data
+            $post = Post::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'profession' => $data['profession'],
+            ]);
+
+            // Kirim response sukses
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data berhasil dibuat',
+                'data' => $post,
+            ], 201);
+        } catch (\Exception $err) {
+            // Tangani error dan kirim response
+            return response()->json([
+                'status' => 'error',
+                'message' => $err->getMessage(),
+            ], 500);
+        }
     }
 
+    
     /**
      * Display the specified resource.
      */
