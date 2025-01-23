@@ -108,7 +108,6 @@ class PostController extends Controller
         }
     }
 
-    
     /**
      * Display the specified resource.
      */
@@ -121,29 +120,83 @@ class PostController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        $data = Post::findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:datas,email,' . $id,
-            'profession' => 'sometimes|in:Developer,Teacher,Doctor',
-        ]);
-
-        $data->update($validated);
-
-        return response()->json($data);
-    }
+        try {
+            // Validasi data yang diterima dari request
+            $data = $request->all();
+            $rules = [
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:post_data,email,' . $id,
+                'profession' => 'required|in:Developer,Teacher,Doctor',
+            ];
+    
+            $messages = [
+                'name.required' => 'Nama harus diisi',
+                'email.required' => 'Email harus diisi',
+                'email.email' => 'Format email tidak valid',
+                'email.unique' => 'Email sudah digunakan',
+                'profession.required' => 'Profesi harus diisi',
+            ];
+    
+            $validator = Validator::make($data, $rules, $messages);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $validator->errors()->first(),
+                ], 400);
+            }
+    
+            // Cari data berdasarkan ID
+            $post = Post::findOrFail($id);
+    
+            // Update data
+            $post->update([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'profession' => $data['profession'],
+            ]);
+    
+            // Kirim response sukses
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data berhasil diperbarui',
+                'data' => $post,
+            ], 200);
+        } catch (\Exception $err) {
+            // Tangani error dan kirim response
+            return response()->json([
+                'status' => 'error',
+                'message' => $err->getMessage(),
+            ], 500);
+        }
+    }    
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        $data = Post::findOrFail($id);
-        $data->delete();
-
-        return response()->json(['message' => 'Data Management deleted successfully.']);
+        try {
+            // Cari data berdasarkan ID
+            $post = Post::findOrFail($id);
+    
+            // Hapus data
+            $post->delete();
+    
+            // Kirim response sukses
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data berhasil dihapus',
+            ], 200);
+        } catch (\Exception $err) {
+            // Tangani error dan kirim response
+            return response()->json([
+                'status' => 'error',
+                'message' => $err->getMessage(),
+            ], 500);
+        }
     }
+    
 }
