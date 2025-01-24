@@ -25,4 +25,7 @@ Route::post('/data', [PostController::class, 'store']); // POST data baru
 Route::get('/data/{id}', [PostController::class, 'show']); // GET data berdasarkan ID
 Route::put('/data/{id}', [PostController::class, 'update']); // UPDATE data
 Route::delete('/data/{id}', [PostController::class, 'destroy']); // DELETE data
+Route::get('/professions', [PostController::class, 'getProfessions']);
+Route::get('/aggregation', [PostController::class, 'getDateAggregation']);
+
 
